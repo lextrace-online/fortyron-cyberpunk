@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Fortyron // Security & Tech</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#080c10',
+                        bgCard: '#0d1117',
+                        bgElevated: '#111820',
+                        neonCyan: '#00f5ff',
+                        neonMagenta: '#ff00aa',
+                        textPrimary: '#c9d1d9',
+                        textSecondary: '#8b949e',
+                        textMuted: '#484f58',
+                        border: '#1a2233',
+                    },
+                    fontFamily: {
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #080c10;
+            --bgCard: #0d1117;
+            --bgElevated: #111820;
+            --neonCyan: #00f5ff;
+            --neonMagenta: #ff00aa;
+            --textPrimary: #c9d1d9;
+            --textSecondary: #8b949e;
+            --textMuted: #484f58;
+            --border: #1a2233;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--bg);
+            color: var(--textPrimary);
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: hidden;
+        }
+
+        /* Scanline overlay */
+        .scanline-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--neonCyan); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #33f7ff; }
+
+        /* Glitch animation */
+        @keyframes glitch {
+            0%, 90%, 100% { text-shadow: none; transform: translate(0); }
+            91% { text-shadow: -2px 0 var(--neonMagenta), 2px 0 var(--neonCyan); transform: translate(2px, -1px); }
+            92% { text-shadow: 2px 0 var(--neonMagenta), -2px 0 var(--neonCyan); transform: translate(-2px, 1px); }
+            93% { text-shadow: -1px 0 var(--neonCyan), 1px 0 var(--neonMagenta); transform: translate(1px, 0); }
+            94% { text-shadow: 1px 0 var(--neonMagenta), -1px 0 var(--neonCyan); transform: translate(-1px, -1px); }
+            95% { text-shadow: none; transform: translate(0); }
+        }
+
+        .glitch-text {
+            animation: glitch 5s infinite;
+        }
+
+        /* Blinking cursor */
+        @keyframes blink-cursor {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .cursor-blink::after {
+            content: '█';
+            color: var(--neonCyan);
+            animation: blink-cursor 1s step-end infinite;
+            margin-left: 2px;
+            font-size: 0.9em;
+        }
+
+        /* Blink green dot */
+        @keyframes blink-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+        .blink-dot {
+            animation: blink-dot 1.5s ease-in-out infinite;
+        }
+
+        /* Flicker line */
+        @keyframes flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+            20%, 22%, 24%, 55% { opacity: 0.3; }
+        }
+        .flicker-line {
+            animation: flicker 3s infinite;
+        }
+
+        /* Neon card hover */
+        .neon-card {
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        .neon-card:hover {
+            border-color: var(--neonCyan);
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.15), 0 0 30px rgba(0, 245, 255, 0.05);
+            transform: translateY(-4px);
+        }
+        .neon-card-magenta {
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        .neon-card-magenta:hover {
+            border-color: var(--neonMagenta);
+            box-shadow: 0 0 15px rgba(255, 0, 170, 0.15), 0 0 30px rgba(255, 0, 170, 0.05);
+            transform: scale(1.02);
+        }
+        .neon-card-green {
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        .neon-card-green:hover {
+            border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.15), 0 0 30px rgba(0, 255, 136, 0.05);
+            transform: translateY(-4px);
+        }
+
+        /* CTA buttons */
+        .btn-cyan {
+            border: 1px solid var(--neonCyan);
+            color: var(--neonCyan);
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        .btn-cyan:hover {
+            background: var(--neonCyan);
+            color: var(--bg);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+        }
+        .btn-magenta {
+            border: 1px solid var(--neonMagenta);
+            color: var(--neonMagenta);
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        .btn-magenta:hover {
+            background: var(--neonMagenta);
+            color: var(--bg);
+            box-shadow: 0 0 20px rgba(255, 0, 170, 0.3);
+        }
+
+        /* Nav link underline */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--neonCyan);
+            box-shadow: 0 0 6px var(--neonCyan);
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover { color: var(--neonCyan); }
+        .nav-link:hover::after { width: 100%; }
+
+        /* Input styles */
+        .cyber-input {
+            background: var(--bgCard);
+            border: none;
+            border-bottom: 1px solid var(--border);
+            color: var(--textPrimary);
+            font-family: 'JetBrains Mono', monospace;
+            padding: 12px 16px;
+            width: 100%;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        .cyber-input:focus {
+            border-bottom-color: var(--neonCyan);
+            box-shadow: 0 2px 8px rgba(0, 245, 255, 0.1);
+        }
+        .cyber-input::placeholder {
+            color: var(--textMuted);
+        }
+
+        /* Terminal line appear */
+        .terminal-line {
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.4s ease;
+        }
+        .terminal-line.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Stat counter */
+        .stat-number {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Section separator */
+        .neon-separator {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neonCyan), transparent);
+            box-shadow: 0 0 10px rgba(0, 245, 255, 0.2);
+        }
+
+        /* Product tag pill */
+        .tag-pill {
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            border: 1px solid var(--neonCyan);
+            color: var(--neonCyan);
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body data-id="0" class="font-mono">
+    <app-icon data-id="1" hidden data-icon="shield" data-palette="Dark"></app-icon>
+
+    <!-- Scanline overlay -->
+    <div data-id="2" class="scanline-overlay"></div>
+
+    <!-- Fixed Navigation -->
+    <nav data-id="3" id="navbar-a1b2" class="fixed top-0 left-0 right-0 z-50 bg-bg/80 backdrop-blur-md border-b border-border">
+        <div data-id="4" class="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between h-14">
+            <a data-id="5" href="#" class="text-neonCyan font-bold text-sm md:text-base tracking-wider">[FORTYRON//]</a>
+            <!-- Desktop nav -->
+            <div data-id="6" class="hidden md:flex items-center gap-6 text-xs text-textSecondary uppercase tracking-wider">
+                <a data-id="7" href="#kategorie" class="nav-link">produkty</a>
+                <a data-id="8" href="#kategorie" class="nav-link">kategorie</a>
+                <a data-id="9" href="#proc" class="nav-link">o nás</a>
+                <a data-id="10" href="#distributori" class="nav-link">distributoři</a>
+                <a data-id="11" href="#kontakt" class="nav-link">kontakt</a>
+            </div>
+            <!-- Mobile menu button -->
+            <button data-id="12" id="mobile-menu-btn-c3d4" class="md:hidden p-2 text-textSecondary">
+                <i data-id="13" data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile nav menu -->
+    <nav data-id="14" id="mobile-menu-e5f6" class="hidden fixed inset-0 bg-bg z-[60] flex flex-col p-6 pt-4">
+        <div data-id="15" class="flex items-center justify-between mb-10">
+            <span data-id="16" class="text-neonCyan font-bold text-sm tracking-wider">[FORTYRON//]</span>
+            <button data-id="17" id="mobile-menu-close-g7h8" class="p-2 text-textSecondary">
+                <i data-id="18" data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <div data-id="19" class="flex flex-col gap-6 text-sm text-textSecondary uppercase tracking-wider">
+            <a data-id="20" href="#kategorie" class="nav-link mobile-nav-link-item">produkty</a>
+            <a data-id="21" href="#kategorie" class="nav-link mobile-nav-link-item">kategorie</a>
+            <a data-id="22" href="#proc" class="nav-link mobile-nav-link-item">o nás</a>
+            <a data-id="23" href="#distributori" class="nav-link mobile-nav-link-item">distributoři</a>
+            <a data-id="24" href="#kontakt" class="nav-link mobile-nav-link-item">kontakt</a>
+        </div>
+    </nav>
+
+    <main data-id="25">
+        <!-- HERO Section -->
+        <section data-id="26" id="hero-i9j0" class="min-h-screen flex flex-col items-center justify-center px-4 md:px-8 relative">
+            <div data-id="27" class="text-center max-w-4xl mx-auto">
+                <!-- Glitch Heading -->
+                <h1 data-id="28" class="glitch-text text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-extrabold text-neonCyan leading-tight mb-2 tracking-tight">
+                    FORTYRON//
+                </h1>
+                <h2 data-id="29" class="glitch-text text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold text-neonCyan/80 tracking-widest mb-6">
+                    SECURITY & TECH
+                </h2>
+
+                <!-- Subtitle with cursor -->
+                <p data-id="30" class="text-textSecondary text-xs sm:text-sm md:text-base mb-10 cursor-blink">
+                    Bezpečnostní technologie. Chytrá domácnost. PC vybavení.
+                </p>
+
+                <!-- Terminal boot sequence -->
+                <div data-id="31" id="terminal-k1l2" class="text-left max-w-xl mx-auto bg-bgCard border border-border rounded-lg p-4 md:p-6 mb-10 text-xs md:text-sm">
+                    <div data-id="32" class="flex items-center gap-2 mb-4">
+                        <span data-id="33" class="w-3 h-3 rounded-full bg-neonMagenta/70"></span>
+                        <span data-id="34" class="w-3 h-3 rounded-full bg-yellow-500/70"></span>
+                        <span data-id="35" class="w-3 h-3 rounded-full bg-green-500/70"></span>
+                        <span data-id="36" class="ml-2 text-textMuted text-[10px]">fortyron@sys:~$</span>
+                    </div>
+                    <div data-id="37" id="boot-line-1" class="terminal-line text-textSecondary mb-1"><span data-id="38" class="text-yellow-400">[SYS]</span> Inicializace Fortyron systému...</div>
+                    <div data-id="39" id="boot-line-2" class="terminal-line text-textSecondary mb-1"><span data-id="40" class="text-green-400">[OK]</span> Bezpečnostní protokoly — <span data-id="41" class="text-neonCyan">AKTIVNÍ</span></div>
+                    <div data-id="42" id="boot-line-3" class="terminal-line text-textSecondary mb-1"><span data-id="43" class="text-green-400">[OK]</span> Distributoři: ATC, Abacus, ELKO EP — <span data-id="44" class="text-neonCyan">ONLINE</span></div>
+                    <div data-id="45" id="boot-line-4" class="terminal-line text-textSecondary mb-1"><span data-id="46" class="text-green-400">[OK]</span> Skladové zásoby — <span data-id="47" class="text-neonCyan">SYNCHRONIZED</span></div>
+                    <div data-id="48" id="boot-line-5" class="terminal-line text-textSecondary mb-1"><span data-id="49" class="text-green-400">[OK]</span> Fortyron.cz — <span data-id="50" class="text-neonCyan">SPUŠTĚNO</span></div>
+                    <div data-id="51" id="boot-line-6" class="terminal-line text-textSecondary"><span data-id="52" class="text-neonMagenta">[ACCESS]</span> Úroveň zabezpečení: <span data-id="53" class="text-neonMagenta font-bold">ENTERPRISE GRADE</span></div>
+                </div>
+
+                <!-- CTA Buttons -->
+                <div data-id="54" class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a data-id="55" href="#kategorie" class="btn-cyan px-6 py-3 text-xs md:text-sm tracking-wider font-semibold min-h-[44px] flex items-center">
+                        [ PROCHÁZET PRODUKTY ]
+                    </a>
+                    <a data-id="56" href="#kontakt" class="btn-magenta px-6 py-3 text-xs md:text-sm tracking-wider font-semibold min-h-[44px] flex items-center">
+                        [ KONTAKTOVAT NÁS ]
+                    </a>
+                </div>
+            </div>
+
+            <!-- Separator -->
+            <div data-id="57" class="neon-separator w-full max-w-4xl mx-auto mt-16 md:mt-20"></div>
+        </section>
+
+        <!-- KATEGORIE Section -->
+        <section data-id="58" id="kategorie" class="py-16 md:py-24 px-4 md:px-8 max-w-7xl mx-auto">
+            <h2 data-id="59" class="text-lg md:text-2xl font-bold text-neonCyan mb-10 md:mb-14 cursor-blink tracking-wider">
+                KATEGORIE <span data-id="60" class="text-textMuted">// categories.scan[]</span>
+            </h2>
+
+            <div data-id="61" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <!-- Category 1 -->
+                <div data-id="62" class="neon-card-magenta bg-bgCard rounded-lg p-6 md:p-8 cursor-pointer">
+                    <div data-id="63" class="text-4xl mb-4">📷</div>
+                    <h3 data-id="64" class="text-neonCyan font-bold text-sm md:text-base mb-3 tracking-wider">KAMEROVÉ SYSTÉMY</h3>
+                    <p data-id="65" class="text-textSecondary text-xs leading-relaxed mb-5">IP kamery, NVR/DVR systémy, CCTV řešení pro domácnost i firmy. Analogové i digitální.</p>
+                    <span data-id="66" class="text-neonMagenta text-xs font-semibold tracking-wider">[ ZOBRAZIT → ]</span>
+                </div>
+                <!-- Category 2 -->
+                <div data-id="67" class="neon-card-magenta bg-bgCard rounded-lg p-6 md:p-8 cursor-pointer">
+                    <div data-id="68" class="text-4xl mb-4">🏠</div>
+                    <h3 data-id="69" class="text-neonCyan font-bold text-sm md:text-base mb-3 tracking-wider">CHYTRÁ DOMÁCNOST</h3>
+                    <p data-id="70" class="text-textSecondary text-xs leading-relaxed mb-5">Smart home zařízení, chytré zásuvky, senzory, osvětlení a řídící jednotky.</p>
+                    <span data-id="71" class="text-neonMagenta text-xs font-semibold tracking-wider">[ ZOBRAZIT → ]</span>
+                </div>
+                <!-- Category 3 -->
+                <div data-id="72" class="neon-card-magenta bg-bgCard rounded-lg p-6 md:p-8 cursor-pointer">
+                    <div data-id="73" class="text-4xl mb-4">🖥️</div>
+                    <h3 data-id="74" class="text-neonCyan font-bold text-sm md:text-base mb-3 tracking-wider">PC VYBAVENÍ</h3>
+                    <p data-id="75" class="text-textSecondary text-xs leading-relaxed mb-5">Komponenty, periferie, notebooky a příslušenství pro domácí i firemní použití.</p>
+                    <span data-id="76" class="text-neonMagenta text-xs font-semibold tracking-wider">[ ZOBRAZIT → ]</span>
+                </div>
+                <!-- Category 4 -->
+                <div data-id="77" class="neon-card-magenta bg-bgCard rounded-lg p-6 md:p-8 cursor-pointer">
+                    <div data-id="78" class="text-4xl mb-4">🔒</div>
+                    <h3 data-id="79" class="text-neonCyan font-bold text-sm md:text-base mb-3 tracking-wider">BEZPEČNOST & ACCESS</h3>
+                    <p data-id="80" class="text-textSecondary text-xs leading-relaxed mb-5">Alarmy, přístupové systémy, smart zámky, senzory pohybu a bezpečnostní příslušenství.</p>
+                    <span data-id="81" class="text-neonMagenta text-xs font-semibold tracking-wider">[ ZOBRAZIT → ]</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Separator -->
+        <div data-id="82" class="neon-separator max-w-7xl mx-auto"></div>
+
+        <!-- FEATURED PRODUCTS Section -->
+        <section data-id="83" id="produkty-m3n4" class="py-16 md:py-24 px-4 md:px-8 max-w-7xl mx-auto">
+            <h2 data-id="84" class="text-lg md:text-2xl font-bold text-neonMagenta mb-10 md:mb-14 cursor-blink tracking-wider">
+                FEATURED PRODUCTS <span data-id="85" class="text-textMuted">// products.featured[]</span>
+            </h2>
+
+            <div data-id="86" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                <!-- Product 1 -->
+                <div data-id="87" class="neon-card bg-bgCard rounded-lg p-6 flex flex-col">
+                    <span data-id="88" class="tag-pill self-start mb-4">CAM</span>
+                    <h3 data-id="89" class="text-neonCyan font-bold text-sm mb-2 tracking-wider">Hikvision DS-2CD2347G2-LU</h3>
+                    <p data-id="90" class="text-textSecondary text-xs leading-relaxed mb-4 flex-1">4MP ColorVu IP kamera s barevným nočním viděním. Outdoor, IP67.</p>
+                    <p data-id="91" class="text-neonMagenta font-bold text-sm mb-4">od 2 490 Kč</p>
+                    <button data-id="92" class="btn-cyan px-4 py-2 text-xs tracking-wider font-semibold w-full min-h-[44px] cursor-pointer add-to-cart-btn">[ DO KOŠÍKU ]</button>
+                </div>
+                <!-- Product 2 -->
+                <div data-id="93" class="neon-card bg-bgCard rounded-lg p-6 flex flex-col">
+                    <span data-id="94" class="tag-pill self-start mb-4">CAM</span>
+                    <h3 data-id="95" class="text-neonCyan font-bold text-sm mb-2 tracking-wider">NVR Recorder 8CH PoE</h3>
+                    <p data-id="96" class="text-textSecondary text-xs leading-relaxed mb-4 flex-1">8-kanálový síťový videorekordér s PoE porty. Podpora 4K rozlišení.</p>
+                    <p data-id="97" class="text-neonMagenta font-bold text-sm mb-4">od 3 990 Kč</p>
+                    <button data-id="98" class="btn-cyan px-4 py-2 text-xs tracking-wider font-semibold w-full min-h-[44px] cursor-pointer add-to-cart-btn">[ DO KOŠÍKU ]</button>
+                </div>
+                <!-- Product 3 -->
+                <div data-id="99" class="neon-card bg-bgCard rounded-lg p-6 flex flex-col">
+                    <span data-id="100" class="tag-pill self-start mb-4" style="border-color: var(--neonMagenta); color: var(--neonMagenta);">SMART</span>
+                    <h3 data-id="101" class="text-neonCyan font-bold text-sm mb-2 tracking-wider">Sonoff NSPanel Pro</h3>
+                    <p data-id="102" class="text-textSecondary text-xs leading-relaxed mb-4 flex-1">Chytrý dotykový panel pro řízení celé domácnosti. Zigbee hub integrován.</p>
+                    <p data-id="103" class="text-neonMagenta font-bold text-sm mb-4">od 1 890 Kč</p>
+                    <button data-id="104" class="btn-cyan px-4 py-2 text-xs tracking-wider font-semibold w-full min-h-[44px] cursor-pointer add-to-cart-btn">[ DO KOŠÍKU ]</button>
+                </div>
+                <!-- Product 4 -->
+                <div data-id="105" class="neon-card bg-bgCard rounded-lg p-6 flex flex-col">
+                    <span data-id="106" class="tag-pill self-start mb-4" style="border-color: var(--neonMagenta); color: var(--neonMagenta);">SMART</span>
+                    <h3 data-id="107" class="text-neonCyan font-bold text-sm mb-2 tracking-wider">Aqara Motion Sensor P1</h3>
+                    <p data-id="108" class="text-textSecondary text-xs leading-relaxed mb-4 flex-1">Zigbee senzor pohybu s nastavitelnou citlivostí. Bateriový provoz.</p>
+                    <p data-id="109" class="text-neonMagenta font-bold text-sm mb-4">od 590 Kč</p>
+                    <button data-id="110" class="btn-cyan px-4 py-2 text-xs tracking-wider font-semibold w-full min-h-[44px] cursor-pointer add-to-cart-btn">[ DO KOŠÍKU ]</button>
+                </div>
+                <!-- Product 5 -->
+                <div data-id="111" class="neon-card bg-bgCard rounded-lg p-6 flex flex-col">
+                    <span data-id="112" class="tag-pill self-start mb-4" style="border-color: #ff6b6b; color: #ff6b6b;">SEC</span>
+                    <h3 data-id="113" class="text-neonCyan font-bold text-sm mb-2 tracking-wider">Satel INTEGRA 32</h3>
+                    <p data-id="114" class="text-textSecondary text-xs leading-relaxed mb-4 flex-1">Zabezpečovací ústředna pro 32 zón. Profesionální alarmový systém.</p>
+                    <p data-id="115" class="text-neonMagenta font-bold text-sm mb-4">od 4 290 Kč</p>
+                    <button data-id="116" class="btn-cyan px-4 py-2 text-xs tracking-wider font-semibold w-full min-h-[44px] cursor-pointer add-to-cart-btn">[ DO KOŠÍKU ]</button>
+                </div>
+                <!-- Product 6 -->
+                <div data-id="117" class="neon-card bg-bgCard rounded-lg p-6 flex flex-col">
+                    <span data-id="118" class="tag-pill self-start mb-4" style="border-color: #ffd93d; color: #ffd93d;">PC</span>
+                    <h3 data-id="119" class="text-neonCyan font-bold text-sm mb-2 tracking-wider">UPS APC Back-UPS 650VA</h3>
+                    <p data-id="120" class="text-textSecondary text-xs leading-relaxed mb-4 flex-1">Záložní zdroj pro ochranu počítačů a síťových prvků. 650VA/400W.</p>
+                    <p data-id="121" class="text-neonMagenta font-bold text-sm mb-4">od 1 990 Kč</p>
+                    <button data-id="122" class="btn-cyan px-4 py-2 text-xs tracking-wider font-semibold w-full min-h-[44px] cursor-pointer add-to-cart-btn">[ DO KOŠÍKU ]</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Separator -->
+        <div data-id="123" class="neon-separator max-w-7xl mx-auto"></div>
+
+        <!-- PROČ FORTYRON Section -->
+        <section data-id="124" id="proc" class="py-16 md:py-24 px-4 md:px-8 max-w-7xl mx-auto">
+            <h2 data-id="125" class="text-lg md:text-2xl font-bold text-neonCyan mb-10 md:mb-14 cursor-blink tracking-wider">
+                PROČ FORTYRON <span data-id="126" class="text-textMuted">// why.fortyron[]</span>
+            </h2>
+
+            <div data-id="127" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <div data-id="128" class="neon-card bg-bgCard rounded-lg p-6 md:p-8">
+                    <div data-id="129" class="text-3xl mb-4">⚡</div>
+                    <h3 data-id="130" class="text-neonCyan font-bold text-sm mb-3 tracking-wider">Rychlé doručení</h3>
+                    <p data-id="131" class="text-textSecondary text-xs leading-relaxed">Expedice do 24h. Spolupráce s největšími českými distributory pro vždy dostupné zboží.</p>
+                </div>
+                <div data-id="132" class="neon-card bg-bgCard rounded-lg p-6 md:p-8">
+                    <div data-id="133" class="text-3xl mb-4">🔧</div>
+                    <h3 data-id="134" class="text-neonCyan font-bold text-sm mb-3 tracking-wider">Profesionální podpora</h3>
+                    <p data-id="135" class="text-textSecondary text-xs leading-relaxed">Technická podpora při výběru i instalaci. Poradíme s každým projektem.</p>
+                </div>
+                <div data-id="136" class="neon-card bg-bgCard rounded-lg p-6 md:p-8">
+                    <div data-id="137" class="text-3xl mb-4">✅</div>
+                    <h3 data-id="138" class="text-neonCyan font-bold text-sm mb-3 tracking-wider">Ověřené produkty</h3>
+                    <p data-id="139" class="text-textSecondary text-xs leading-relaxed">Pouze zboží od prověřených výrobců. Plná záruka a servis v ČR.</p>
+                </div>
+                <div data-id="140" class="neon-card bg-bgCard rounded-lg p-6 md:p-8">
+                    <div data-id="141" class="text-3xl mb-4">💳</div>
+                    <h3 data-id="142" class="text-neonCyan font-bold text-sm mb-3 tracking-wider">Férové ceny</h3>
+                    <p data-id="143" class="text-textSecondary text-xs leading-relaxed">Přímá spolupráce s distributory ATC, Abacus a ELKO EP = nejlepší ceny na trhu.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Separator -->
+        <div data-id="144" class="neon-separator max-w-7xl mx-auto"></div>
+
+        <!-- DISTRIBUTOŘI Section -->
+        <section data-id="145" id="distributori" class="py-16 md:py-24 px-4 md:px-8 max-w-7xl mx-auto">
+            <h2 data-id="146" class="text-lg md:text-2xl font-bold text-neonCyan mb-10 md:mb-14 cursor-blink tracking-wider">
+                DISTRIBUTOŘI <span data-id="147" class="text-textMuted">// partners.verified[]</span>
+            </h2>
+
+            <div data-id="148" class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                <div data-id="149" class="neon-card-green bg-bgCard rounded-lg p-6 md:p-8">
+                    <span data-id="150" class="inline-block text-[10px] px-3 py-1 rounded-full border border-green-500 text-green-400 mb-5 tracking-wider">[VERIFIED ✓]</span>
+                    <h3 data-id="151" class="text-neonCyan font-bold text-base md:text-lg mb-3 tracking-wider">ATC DISTRIBUTION</h3>
+                    <p data-id="152" class="text-textSecondary text-xs leading-relaxed">Největší IT distributor v ČR. Přes 30 000 produktů skladem.</p>
+                </div>
+                <div data-id="153" class="neon-card-green bg-bgCard rounded-lg p-6 md:p-8">
+                    <span data-id="154" class="inline-block text-[10px] px-3 py-1 rounded-full border border-green-500 text-green-400 mb-5 tracking-wider">[VERIFIED ✓]</span>
+                    <h3 data-id="155" class="text-neonCyan font-bold text-base md:text-lg mb-3 tracking-wider">ABACUS</h3>
+                    <p data-id="156" class="text-textSecondary text-xs leading-relaxed">Specialista na bezpečnostní technologie a kamerové systémy.</p>
+                </div>
+                <div data-id="157" class="neon-card-green bg-bgCard rounded-lg p-6 md:p-8">
+                    <span data-id="158" class="inline-block text-[10px] px-3 py-1 rounded-full border border-green-500 text-green-400 mb-5 tracking-wider">[VERIFIED ✓]</span>
+                    <h3 data-id="159" class="text-neonCyan font-bold text-base md:text-lg mb-3 tracking-wider">ELKO EP</h3>
+                    <p data-id="160" class="text-textSecondary text-xs leading-relaxed">Přední český výrobce a distributor elektroinstalačního materiálu a chytré domácnosti.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Separator -->
+        <div data-id="161" class="neon-separator max-w-7xl mx-auto"></div>
+
+        <!-- STATS Section -->
+        <section data-id="162" id="stats-o5p6" class="py-16 md:py-24 px-4 md:px-8 max-w-7xl mx-auto">
+            <h2 data-id="163" class="text-lg md:text-2xl font-bold text-neonCyan mb-10 md:mb-14 cursor-blink tracking-wider text-center">
+                SYSTEM.STATS<span data-id="164" class="text-textMuted">[]</span>
+            </h2>
+
+            <div data-id="165" class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <div data-id="166" class="neon-card bg-bgCard rounded-lg p-6 md:p-8 text-center">
+                    <div data-id="167" class="stat-number text-3xl md:text-5xl font-extrabold text-neonCyan mb-2" data-target="500" data-suffix="+">0</div>
+                    <p data-id="168" class="text-textSecondary text-xs tracking-wider">produktů skladem</p>
+                </div>
+                <div data-id="169" class="neon-card bg-bgCard rounded-lg p-6 md:p-8 text-center">
+                    <div data-id="170" class="stat-number text-3xl md:text-5xl font-extrabold text-neonCyan mb-2" data-target="3" data-suffix="">0</div>
+                    <p data-id="171" class="text-textSecondary text-xs tracking-wider">ověření distributoři</p>
+                </div>
+                <div data-id="172" class="neon-card bg-bgCard rounded-lg p-6 md:p-8 text-center">
+                    <div data-id="173" class="stat-number text-3xl md:text-5xl font-extrabold text-neonCyan mb-2" data-target="24" data-suffix="h">0</div>
+                    <p data-id="174" class="text-textSecondary text-xs tracking-wider">expedice</p>
+                </div>
+                <div data-id="175" class="neon-card bg-bgCard rounded-lg p-6 md:p-8 text-center">
+                    <div data-id="176" class="stat-number text-3xl md:text-5xl font-extrabold text-neonCyan mb-2" data-target="100" data-suffix="%">0</div>
+                    <p data-id="177" class="text-textSecondary text-xs tracking-wider">česká podpora</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Separator -->
+        <div data-id="178" class="neon-separator max-w-7xl mx-auto"></div>
+
+        <!-- KONTAKT Section -->
+        <section data-id="179" id="kontakt" class="py-16 md:py-24 px-4 md:px-8 max-w-7xl mx-auto">
+            <h2 data-id="180" class="text-lg md:text-2xl font-bold text-neonMagenta mb-10 md:mb-14 cursor-blink tracking-wider">
+                KONTAKT <span data-id="181" class="text-textMuted">// contact.init()</span>
+            </h2>
+
+            <div data-id="182" class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                <!-- Left: Terminal info -->
+                <div data-id="183" class="bg-bgCard border border-border rounded-lg p-6 md:p-8">
+                    <div data-id="184" class="flex items-center gap-2 mb-6">
+                        <span data-id="185" class="w-2.5 h-2.5 rounded-full bg-neonCyan"></span>
+                        <span data-id="186" class="text-textMuted text-[10px]">contact@fortyron:~$</span>
+                    </div>
+                    <div data-id="187" class="space-y-3 text-xs md:text-sm">
+                        <p data-id="188" class="text-textSecondary"><span data-id="189" class="text-neonCyan">WEB:</span> fortyron.cz</p>
+                        <p data-id="190" class="text-textSecondary"><span data-id="191" class="text-neonCyan">EMAIL:</span> info@fortyron.cz</p>
+                        <p data-id="192" class="text-textSecondary"><span data-id="193" class="text-neonCyan">DISTRIBUCE:</span> ATC / Abacus / ELKO EP</p>
+                        <p data-id="194" class="text-textSecondary">
+                            <span data-id="195" class="text-neonCyan">STAV:</span>
+                            <span data-id="196" class="text-green-400">ONLINE</span>
+                            <span data-id="197" class="text-green-400 blink-dot inline-block ml-1">●</span>
+                        </p>
+                        <p data-id="198" class="text-textSecondary"><span data-id="199" class="text-neonCyan">PODPORA:</span> Po–Pá 9:00–17:00</p>
+                    </div>
+                </div>
+
+                <!-- Right: Contact Form -->
+                <div data-id="200" class="bg-bgCard border border-border rounded-lg p-6 md:p-8">
+                    <form data-id="201" id="contact-form-q7r8" class="space-y-5">
+                        <input data-id="202" type="text" class="cyber-input rounded text-xs" placeholder="[ vaše jméno ]" required />
+                        <input data-id="203" type="email" class="cyber-input rounded text-xs" placeholder="[ váš email ]" required />
+                        <textarea data-id="204" class="cyber-input rounded text-xs resize-none" rows="5" placeholder="[ zpráva ]" required></textarea>
+                        <button data-id="205" type="submit" id="submit-btn-s9t0" class="btn-cyan px-6 py-3 text-xs tracking-wider font-semibold w-full min-h-[44px] cursor-pointer">
+                            [ ODESLAT → ]
+                        </button>
+                    </form>
+                    <p data-id="206" id="form-msg-u1v2" class="text-green-400 text-xs mt-4 hidden">✓ Zpráva odeslána. Děkujeme!</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer data-id="207" class="mt-16 border-t border-border relative">
+        <!-- Flickering neon line -->
+        <div data-id="208" class="flicker-line h-px bg-neonCyan absolute top-0 left-0 right-0" style="box-shadow: 0 0 10px rgba(0,245,255,0.4);"></div>
+
+        <div data-id="209" class="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-14 text-center">
+            <p data-id="210" class="text-textSecondary text-xs mb-3 tracking-wider">
+                © 2026 FORTYRON.CZ // SECURITY & TECH // Praha, CZ
+            </p>
+            <p data-id="211" class="text-textMuted text-[10px] mb-5 tracking-wide">
+                Spolupracujeme s: ATC Distribution • Abacus • ELKO EP
+            </p>
+            <div data-id="212" class="flex items-center justify-center gap-4 md:gap-6 text-textMuted text-[10px] mb-6 flex-wrap">
+                <a data-id="213" href="#" class="nav-link">Obchodní podmínky</a>
+                <span data-id="214">|</span>
+                <a data-id="215" href="#" class="nav-link">Kontakty</a>
+                <span data-id="216">|</span>
+                <a data-id="217" href="#" class="nav-link">Ochrana osobních údajů</a>
+            </div>
+            <p data-id="218" class="text-textMuted text-[10px] tracking-wide mb-4">
+                Moderní e-shop pro bezpečný a chytrý domov.
+            </p>
+            <p data-id="219" class="text-textMuted text-[10px]">Made by Copilot</p>
+        </div>
+    </footer>
+
+    <script>
+        // Guard Lucide icons
+        if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
+            lucide.createIcons();
+        }
+
+        // === Mobile Menu ===
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn-c3d4');
+        const mobileMenu = document.getElementById('mobile-menu-e5f6');
+        const mobileMenuClose = document.getElementById('mobile-menu-close-g7h8');
+
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', function() {
+                mobileMenu.classList.remove('hidden');
+            });
+        }
+        if (mobileMenuClose) {
+            mobileMenuClose.addEventListener('click', function() {
+                mobileMenu.classList.add('hidden');
+            });
+        }
+        // Close on link click
+        document.querySelectorAll('.mobile-nav-link-item').forEach(function(link) {
+            link.addEventListener('click', function() {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+
+        // === Terminal Boot Sequence ===
+        (function() {
+            var lines = [
+                'boot-line-1', 'boot-line-2', 'boot-line-3',
+                'boot-line-4', 'boot-line-5', 'boot-line-6'
+            ];
+            lines.forEach(function(id, i) {
+                setTimeout(function() {
+                    var el = document.getElementById(id);
+                    if (el) el.classList.add('visible');
+                }, 600 + i * 500);
+            });
+        })();
+
+        // === Stat Counter Animation ===
+        (function() {
+            var statEls = document.querySelectorAll('.stat-number');
+            var animated = new Set();
+
+            function animateCounter(el) {
+                var target = parseInt(el.getAttribute('data-target'), 10);
+                var suffix = el.getAttribute('data-suffix') || '';
+                var duration = 1500;
+                var start = 0;
+                var startTime = null;
+
+                function step(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    var progress = Math.min((timestamp - startTime) / duration, 1);
+                    var eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+                    var current = Math.floor(eased * target);
+                    el.textContent = current + suffix;
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        el.textContent = target + suffix;
+                    }
+                }
+                requestAnimationFrame(step);
+            }
+
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting && !animated.has(entry.target)) {
+                        animated.add(entry.target);
+                        animateCounter(entry.target);
+                    }
+                });
+            }, { threshold: 0.3 });
+
+            statEls.forEach(function(el) {
+                observer.observe(el);
+            });
+        })();
+
+        // === Contact Form ===
+        var contactForm = document.getElementById('contact-form-q7r8');
+        if (contactForm) {
+            contactForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var msg = document.getElementById('form-msg-u1v2');
+                if (msg) {
+                    msg.classList.remove('hidden');
+                    setTimeout(function() {
+                        msg.classList.add('hidden');
+                    }, 4000);
+                }
+                contactForm.reset();
+            });
+        }
+
+        // === Add to Cart buttons ===
+        document.querySelectorAll('.add-to-cart-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var original = btn.textContent;
+                btn.textContent = '[ ✓ PŘIDÁNO ]';
+                btn.style.background = 'var(--neonCyan)';
+                btn.style.color = 'var(--bg)';
+                setTimeout(function() {
+                    btn.textContent = original;
+                    btn.style.background = 'transparent';
+                    btn.style.color = 'var(--neonCyan)';
+                }, 1500);
+            });
+        });
+
+        // === Navbar scroll effect ===
+        var navbar = document.getElementById('navbar-a1b2');
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 50) {
+                navbar.style.borderBottomColor = 'rgba(0, 245, 255, 0.15)';
+            } else {
+                navbar.style.borderBottomColor = '';
+            }
+        });
+    </script>
+</body>
+</html>
